@@ -4,6 +4,8 @@ from fastapi import APIRouter, HTTPException
 
 from app.core.constants import VALID_STATIONS
 
+from app.core.timezone import convert_to_madrid_timezone
+
 router = APIRouter()
 
 
@@ -36,6 +38,9 @@ async def get_weather_data(
             status_code=404,
             detail=f"Invalid station. Valid stations: {list(VALID_STATIONS.keys())}",
         )
+
+    parsed_start_date = convert_to_madrid_timezone(parsed_start_date)
+    parsed_end_date = convert_to_madrid_timezone(parsed_end_date)
 
     return {
         "station": VALID_STATIONS[station_id.lower()],
