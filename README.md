@@ -1,12 +1,16 @@
-\# Antarctic Weather Intelligence
+# Antarctic Weather Intelligence
 
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Latest-green)
+![Docker](https://img.shields.io/badge/Docker-Enabled-blue)
+![Tests](https://img.shields.io/badge/Tests-Passing-success)
 
 
 Backend API developed with FastAPI for retrieving, aggregating and caching Antarctic weather data.
 
 
 
-\## Overview
+## Overview
 
 
 
@@ -18,11 +22,11 @@ The service provides historical weather data for Antarctic meteorological statio
 
 
 
-\* Temperature
+* Temperature
 
-\* Pressure
+* Pressure
 
-\* Wind Speed
+* Wind Speed
 
 
 
@@ -30,15 +34,15 @@ The API supports multiple aggregation levels, SQLite caching, timezone conversio
 
 
 
-\---
+---
 
 
 
-\## Features
+## Features
 
 
 
-\### Weather Data Retrieval
+### Weather Data Retrieval
 
 
 
@@ -46,13 +50,13 @@ Retrieve historical weather data for:
 
 
 
-\* Gabriel de Castilla Station
+* Gabriel de Castilla Station
 
-\* Juan Carlos I Station
+* Juan Carlos I Station
 
 
 
-\### Aggregations
+### Aggregations
 
 
 
@@ -60,17 +64,17 @@ Supported aggregation levels:
 
 
 
-\* none
+* none
 
-\* hourly
+* hourly
 
-\* daily
+* daily
 
-\* monthly
+* monthly
 
 
 
-\### Timezone Handling
+### Timezone Handling
 
 
 
@@ -86,7 +90,7 @@ including the UTC offset.
 
 
 
-\### SQLite Cache
+### SQLite Cache
 
 
 
@@ -94,15 +98,15 @@ To avoid excessive requests to the external weather provider:
 
 
 
-\* Data is stored locally in SQLite
+* Data is stored locally in SQLite
 
-\* Cache hit/miss strategy implemented
+* Cache hit/miss strategy implemented
 
-\* Previously requested data is served directly from cache
+* Previously requested data is served directly from cache
 
 
 
-\### Field Selection
+### Field Selection
 
 
 
@@ -110,11 +114,11 @@ Users may select:
 
 
 
-\* temperature
+* temperature
 
-\* pressure
+* pressure
 
-\* wind\_speed
+* wind\_speed
 
 
 
@@ -142,21 +146,21 @@ Current coverage includes:
 
 
 
-\* Station validation
+* Station validation
 
-\* Timezone conversion
+* Timezone conversion
 
-\* Aggregation logic
+* Aggregation logic
 
-\* Weather service utilities
-
-
-
-\---
+* Weather service utilities
 
 
 
-\## Architecture
+---
+
+
+
+## Architecture
 
 
 
@@ -210,15 +214,15 @@ app/
 
 
 
-\---
+---
 
 
 
-\## Installation
+## Installation
 
 
 
-\### Create virtual environment
+### Create virtual environment
 
 
 
@@ -230,7 +234,7 @@ python -m venv .venv
 
 
 
-\### Activate
+### Activate
 
 
 
@@ -246,7 +250,7 @@ Windows:
 
 
 
-\### Install dependencies
+### Install dependencies
 
 
 
@@ -258,11 +262,11 @@ pip install -r requirements.txt
 
 
 
-\---
+---
 
 
 
-\## Running Locally
+## Running Locally
 
 
 
@@ -286,11 +290,11 @@ http://127.0.0.1:8000/docs
 
 
 
-\---
+---
 
 
 
-\## Docker
+## Docker
 
 
 
@@ -318,15 +322,15 @@ http://127.0.0.1:8001/docs
 
 
 
-\---
+---
 
 
 
-\## Example Requests
+## Example Requests
 
 
 
-\### Daily Aggregation
+### Daily Aggregation
 
 
 
@@ -338,7 +342,7 @@ GET /api/antarctica/data/start/2024-01-01T00:00:00/end/2024-01-10T00:00:00/stati
 
 
 
-\### Monthly Aggregation
+### Monthly Aggregation
 
 
 
@@ -350,7 +354,7 @@ GET /api/antarctica/data/start/2024-01-01T00:00:00/end/2024-03-31T00:00:00/stati
 
 
 
-\### Temperature Only
+### Temperature Only
 
 
 
@@ -362,11 +366,11 @@ GET /api/antarctica/data/start/2024-01-01T00:00:00/end/2024-01-10T00:00:00/stati
 
 
 
-\---
+---
 
 
 
-\## Cache Strategy
+## Cache Strategy
 
 
 
@@ -402,11 +406,11 @@ Return Response
 
 
 
-\---
+---
 
 
 
-\## Daylight Saving Time (DST)
+## Daylight Saving Time (DST)
 
 
 
@@ -450,11 +454,11 @@ Tests validate DST behavior.
 
 
 
-\---
+---
 
 
 
-\## Testing
+## Testing
 
 
 
@@ -482,55 +486,55 @@ Current status:
 
 
 
-\---
+---
 
 
 
-\## Future Improvements
+## Future Improvements
 
 
 
-\* Frontend dashboard with React + TypeScript
+* Frontend dashboard with React + TypeScript
 
-\* Charts for weather visualization
+* Charts for weather visualization
 
-\* PostgreSQL support
+* PostgreSQL support
 
-\* Redis cache layer
+* Redis cache layer
 
-\* CI/CD pipeline with GitHub Actions
+* CI/CD pipeline with GitHub Actions
 
-\* Extended station catalogue
-
-
-
-\---
+* Extended station catalogue
 
 
 
-\## Technologies
+---
 
 
 
-\* Python 3.13
+## Technologies
 
-\* FastAPI
 
-\* SQLAlchemy
 
-\* SQLite
+* Python 3.13
 
-\* Pydantic
+* FastAPI
 
-\* Pytest
+* SQLAlchemy
 
-\* Docker
+* SQLite
 
-\* Open-Meteo API
+* Pydantic
 
-\* Loguru
+* Pytest
 
-\## Project Status
+* Docker
+
+* Open-Meteo API
+
+* Loguru
+
+## Project Status
 
 
 
@@ -542,19 +546,19 @@ Current implementation includes:
 
 
 
-\* Historical weather retrieval
+* Historical weather retrieval
 
-\* SQLite cache layer
+* SQLite cache layer
 
-\* Daily and monthly aggregations
+* Daily and monthly aggregations
 
-\* Timezone conversion
+* Timezone conversion
 
-\* Docker deployment
+* Docker deployment
 
-\* Automated tests
+* Automated tests
 
-\* OpenAPI / Swagger documentation
+* OpenAPI / Swagger documentation
 
 
 
