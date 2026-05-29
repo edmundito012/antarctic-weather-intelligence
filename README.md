@@ -40,6 +40,7 @@ The API supports multiple aggregation levels, SQLite caching, timezone conversio
 
 ## Features
 
+- Cache metadata with cache age information
 
 
 ### Weather Data Retrieval
@@ -134,7 +135,7 @@ Example:
 
 
 
-\### Automated Tests
+### Automated Tests
 
 
 
