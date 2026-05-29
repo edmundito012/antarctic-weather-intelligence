@@ -31,7 +31,7 @@ class WeatherService:
 
         cached_records = self._get_cached_records(station_id, start_date, end_date)
 
-        if cached_records:
+        if self._is_cache_complete(cached_records, start_date, end_date):
             logger.info("Cache hit")
 
             records = (
@@ -267,3 +267,28 @@ class WeatherService:
         age = datetime.now(UTC) - oldest_cached_record
 
         return round(age.total_seconds() / 60, 2)
+
+    def _is_cache_complete(
+        self,
+        records: list[dict],
+        start_date: datetime,
+        end_date: datetime,
+    ) -> bool:
+        if not records:
+            return False
+
+        cached_dates = {
+            datetime.fromisoformat(record["datetime"]).date()
+            for record in records
+        }
+
+        current_date = start_date.date()
+        final_date = end_date.date()
+
+        while current_date <= final_date:
+            if current_date not in cached_dates:
+                return False
+
+            current_date = current_date.fromordinal(current_date.toordinal() + 1)
+
+        return True
