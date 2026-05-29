@@ -1,0 +1,11 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: antarctic-weather-api
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend/weather.db:/app/weather.db
+    env_file:
+      - ./backend/.env

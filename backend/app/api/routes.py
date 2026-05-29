@@ -8,6 +8,7 @@ from app.core.constants import VALID_STATIONS
 from app.core.timezone import convert_to_madrid_timezone
 from app.db.database import get_db
 from app.services.weather_service import WeatherService
+from app.schemas.weather import WeatherResponse
 
 router = APIRouter()
 
@@ -15,8 +16,10 @@ VALID_AGGREGATIONS = {"none", "hourly", "daily", "monthly"}
 
 
 @router.get(
-    "/api/antarctica/data/start/{start_date}/end/{end_date}/station/{station_id}"
+    "/api/antarctica/data/start/{start_date}/end/{end_date}/station/{station_id}",
+    response_model=WeatherResponse,
 )
+
 async def get_weather_data(
     start_date: str,
     end_date: str,
