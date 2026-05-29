@@ -8,7 +8,11 @@ from app.models.weather_observation import WeatherObservation
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Antarctic Weather Intelligence",
+    title="Antarctic Weather Intelligence API",
+    description=(
+        "FastAPI service for Antarctic historical weather data, "
+        "aggregation, SQLite caching and dashboard visualization."
+    ),
     version="1.0.0",
 )
 
@@ -28,4 +32,17 @@ app.include_router(router)
 
 @app.get("/")
 async def root():
-    return {"message": "API is running"}
+    return {
+        "message": "Antarctic Weather Intelligence API is running",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
+@app.get("/health")
+async def health():
+    return {
+        "status": "ok",
+        "service": "antarctic-weather-intelligence",
+        "version": "1.0.0",
+    }
