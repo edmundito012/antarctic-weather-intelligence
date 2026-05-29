@@ -251,20 +251,18 @@ class WeatherService:
     def _to_naive_datetime(self, dt: datetime) -> datetime:
         return dt.replace(tzinfo=None)
 
-    def _calculate_cache_age_minutes(self, records: list[dict]) -> float | None:
+    def _calculate_cache_age_minutes(self, records):
         if not records:
             return None
 
-        created_at_values = [
-            record["created_at"]
-            for record in records
-            if record.get("created_at") is not None
-        ]
+        oldest_cached_record = records[0].get("created_at")
 
-        if not created_at_values:
+        if oldest_cached_record is None:
             return None
 
-        oldest_cached_record = min(created_at_values)
+        if oldest_cached_record.tzinfo is None:
+            oldest_cached_record = oldest_cached_record.replace(tzinfo=UTC)
+
         age = datetime.now(UTC) - oldest_cached_record
 
         return round(age.total_seconds() / 60, 2)

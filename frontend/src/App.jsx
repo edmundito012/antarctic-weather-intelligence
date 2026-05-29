@@ -13,6 +13,9 @@ import {
 const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8001";
 
+const TABLE_PAGE_SIZE = 100;
+const MAX_CHART_POINTS = 500;
+
 const metricLabels = {
     temperature: "Temperature (°C)",
     pressure: "Pressure (hPa)",
@@ -36,20 +39,42 @@ function App() {
     const [metadata, setMetadata] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const chartData = useMemo(() => {
+    const selectedMetricLabel = metricLabels[metric];
+    const hasAggregatedRecords = aggregation === "daily" || aggregation === "monthly";
+
+    const filteredRecords = useMemo(() => {
         return records.filter(
             (record) => record[metric] !== null && record[metric] !== undefined
         );
     }, [records, metric]);
 
-    const selectedMetricLabel = metricLabels[metric];
+    const chartData = useMemo(() => {
+        if (filteredRecords.length <= MAX_CHART_POINTS) {
+            return filteredRecords;
+        }
+
+        const step = Math.ceil(filteredRecords.length / MAX_CHART_POINTS);
+
+        return filteredRecords.filter((_, index) => index % step === 0);
+    }, [filteredRecords]);
+
+    const totalPages = Math.max(1, Math.ceil(records.length / TABLE_PAGE_SIZE));
+
+    const visibleRecords = useMemo(() => {
+        const startIndex = (currentPage - 1) * TABLE_PAGE_SIZE;
+        const endIndex = startIndex + TABLE_PAGE_SIZE;
+
+        return records.slice(startIndex, endIndex);
+    }, [records, currentPage]);
 
     const fetchWeather = async () => {
         setLoading(true);
         setError("");
         setRecords([]);
         setMetadata(null);
+        setCurrentPage(1);
 
         try {
             const response = await axios.get(
@@ -62,7 +87,9 @@ function App() {
                 }
             );
 
-            setRecords(response.data.records || []);
+            const apiRecords = response.data.records || [];
+
+            setRecords(apiRecords);
             setMetadata({
                 station: response.data.station,
                 stationId: response.data.station_id,
@@ -94,9 +121,7 @@ function App() {
                     </p>
                 </div>
 
-                <div style={styles.heroBadge}>
-                    Personal Project
-                </div>
+                <div style={styles.heroBadge}>Personal Project</div>
             </section>
 
             <section style={styles.card}>
@@ -222,23 +247,39 @@ function App() {
                         <strong>No data loaded yet</strong>
                         <span>Select your filters and fetch weather data.</span>
                     </div>
-                ) : (
-                    <div style={styles.chartWrapper}>
-                        <ResponsiveContainer width="100%" height={380}>
-                            <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="datetime" />
-                                <YAxis />
-                                <Tooltip />
-                                <Line
-                                    type="monotone"
-                                    dataKey={metric}
-                                    strokeWidth={3}
-                                    dot={false}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
+                ) : chartData.length < 2 ? (
+                    <div style={styles.emptyState}>
+                        <strong>Not enough data points to render a trend</strong>
+                        <span>
+                            Try a wider date range or use daily/hourly aggregation.
+                        </span>
                     </div>
+                ) : (
+                    <>
+                        {filteredRecords.length > MAX_CHART_POINTS && (
+                            <p style={styles.info}>
+                                Chart optimized: showing {chartData.length} sampled points from{" "}
+                                {filteredRecords.length} records.
+                            </p>
+                        )}
+
+                        <div style={styles.chartWrapper}>
+                            <ResponsiveContainer width="100%" height={380}>
+                                <LineChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="datetime" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Line
+                                        type="monotone"
+                                        dataKey={metric}
+                                        strokeWidth={3}
+                                        dot={false}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </>
                 )}
             </section>
 
@@ -248,9 +289,39 @@ function App() {
                         <div>
                             <h2 style={styles.sectionTitle}>Dataset</h2>
                             <p style={styles.sectionSubtitle}>
-                                Returned API records for the selected metric.
+                                Showing {visibleRecords.length} of {records.length} returned records.
                             </p>
                         </div>
+
+                        {records.length > TABLE_PAGE_SIZE && (
+                            <div style={styles.pagination}>
+                                <button
+                                    style={styles.paginationButton}
+                                    onClick={() =>
+                                        setCurrentPage((page) => Math.max(1, page - 1))
+                                    }
+                                    disabled={currentPage === 1}
+                                >
+                                    Previous
+                                </button>
+
+                                <span style={styles.pageIndicator}>
+                                    Page {currentPage} of {totalPages}
+                                </span>
+
+                                <button
+                                    style={styles.paginationButton}
+                                    onClick={() =>
+                                        setCurrentPage((page) =>
+                                            Math.min(totalPages, page + 1)
+                                        )
+                                    }
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div style={styles.tableWrapper}>
@@ -259,18 +330,22 @@ function App() {
                             <tr>
                                 <th style={styles.th}>Date</th>
                                 <th style={styles.th}>{selectedMetricLabel}</th>
-                                <th style={styles.th}>Records count</th>
+                                {hasAggregatedRecords && (
+                                    <th style={styles.th}>Records count</th>
+                                )}
                             </tr>
                             </thead>
 
                             <tbody>
-                            {records.map((record) => (
+                            {visibleRecords.map((record) => (
                                 <tr key={record.datetime}>
                                     <td style={styles.td}>{record.datetime}</td>
                                     <td style={styles.td}>{record[metric] ?? "-"}</td>
-                                    <td style={styles.td}>
-                                        {record.records_count ?? "-"}
-                                    </td>
+                                    {hasAggregatedRecords && (
+                                        <td style={styles.td}>
+                                            {record.records_count ?? "-"}
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                             </tbody>
@@ -339,7 +414,9 @@ const styles = {
     cardHeader: {
         display: "flex",
         justifyContent: "space-between",
+        gap: "1rem",
         marginBottom: "1.2rem",
+        flexWrap: "wrap",
     },
     sectionTitle: {
         margin: 0,
@@ -389,6 +466,14 @@ const styles = {
         color: "#991b1b",
         fontWeight: 700,
     },
+    info: {
+        marginTop: 0,
+        color: "#475569",
+        background: "#eff6ff",
+        padding: "0.75rem",
+        borderRadius: "12px",
+        fontWeight: 600,
+    },
     summaryGrid: {
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
@@ -429,6 +514,7 @@ const styles = {
         color: "#64748b",
         border: "1px dashed #cbd5e1",
         borderRadius: "16px",
+        textAlign: "center",
     },
     tableWrapper: {
         overflowX: "auto",
@@ -454,6 +540,24 @@ const styles = {
         padding: "0.9rem",
         borderBottom: "1px solid #f1f5f9",
         color: "#334155",
+    },
+    pagination: {
+        display: "flex",
+        gap: "0.75rem",
+        alignItems: "center",
+        flexWrap: "wrap",
+    },
+    paginationButton: {
+        padding: "0.55rem 0.8rem",
+        borderRadius: "10px",
+        border: "1px solid #cbd5e1",
+        background: "#ffffff",
+        fontWeight: 700,
+        cursor: "pointer",
+    },
+    pageIndicator: {
+        color: "#475569",
+        fontWeight: 700,
     },
 };
 
