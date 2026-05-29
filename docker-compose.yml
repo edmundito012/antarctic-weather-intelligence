@@ -5,6 +5,8 @@ services:
     container_name: antarctic-weather-api
     ports:
       - "8001:8000"
+    environment:
+      DATABASE_URL: sqlite:////app/data/weather.db
     volumes:
       - weather_data:/app/data
     env_file:

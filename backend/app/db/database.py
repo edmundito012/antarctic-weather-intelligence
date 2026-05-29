@@ -1,9 +1,13 @@
 from collections.abc import Generator
+import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DATABASE_URL = "sqlite:////app/data/weather.db"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///./weather.db",
+)
 
 engine = create_engine(
     DATABASE_URL,
