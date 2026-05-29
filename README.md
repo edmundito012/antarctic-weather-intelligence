@@ -489,6 +489,10 @@ Current status:
 ---
 
 
+## Data Provider Note
+
+The original challenge references AEMET OpenData. Due to API access limitations during development, this implementation uses Open-Meteo as the weather data provider while keeping the project architecture provider-agnostic.
+
 
 ## Future Improvements
 
