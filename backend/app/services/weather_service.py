@@ -20,6 +20,7 @@ class WeatherService:
         start_date: datetime,
         end_date: datetime,
         aggregation: str = "none",
+        fields: list[str] | None = None,
     ) -> dict:
         start_date = self._to_naive_datetime(start_date)
         end_date = self._to_naive_datetime(end_date)
@@ -28,7 +29,15 @@ class WeatherService:
 
         if cached_records:
             logger.info("Cache hit")
-            records = cached_records if aggregation in {"none", "hourly"} else self._aggregate_records(cached_records, aggregation)
+
+            records = (
+                cached_records
+                if aggregation in {"none", "hourly"}
+                else self._aggregate_records(cached_records, aggregation)
+            )
+
+            records = self._filter_fields(records, fields)
+
             return {"cache_status": "hit", "records": records}
 
         logger.info("Cache miss")
@@ -45,11 +54,20 @@ class WeatherService:
         self._save_records(records_to_save)
 
         records = self._serialize_records(records_to_save)
-        records = records if aggregation in {"none", "hourly"} else self._aggregate_records(records, aggregation)
+
+        if aggregation not in {"none", "hourly"}:
+            records = self._aggregate_records(records, aggregation)
+
+        records = self._filter_fields(records, fields)
 
         return {"cache_status": "miss", "records": records}
 
-    def _get_cached_records(self, station_id: str, start_date: datetime, end_date: datetime) -> list[dict]:
+    def _get_cached_records(
+        self,
+        station_id: str,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[dict]:
         results = (
             self.db.query(WeatherObservation)
             .filter(
@@ -71,8 +89,13 @@ class WeatherService:
             for row in results
         ]
 
-    def _normalize_open_meteo_response(self, station_id: str, raw_data: dict) -> list[dict]:
+    def _normalize_open_meteo_response(
+        self,
+        station_id: str,
+        raw_data: dict,
+    ) -> list[dict]:
         hourly = raw_data.get("hourly", {})
+
         times = hourly.get("time", [])
         temperatures = hourly.get("temperature_2m", [])
         pressures = hourly.get("surface_pressure", [])
@@ -85,9 +108,15 @@ class WeatherService:
                 {
                     "station_id": station_id,
                     "datetime": datetime.fromisoformat(timestamp),
-                    "temperature": temperatures[index] if index < len(temperatures) else None,
-                    "pressure": pressures[index] if index < len(pressures) else None,
-                    "wind_speed": wind_speeds[index] if index < len(wind_speeds) else None,
+                    "temperature": temperatures[index]
+                    if index < len(temperatures)
+                    else None,
+                    "pressure": pressures[index]
+                    if index < len(pressures)
+                    else None,
+                    "wind_speed": wind_speeds[index]
+                    if index < len(wind_speeds)
+                    else None,
                 }
             )
 
@@ -131,6 +160,7 @@ class WeatherService:
 
         for record in records:
             dt = record["datetime"]
+
             if isinstance(dt, datetime):
                 dt = dt.isoformat(timespec="minutes")
 
@@ -145,7 +175,11 @@ class WeatherService:
 
         return serialized
 
-    def _aggregate_records(self, records: list[dict], aggregation: str) -> list[dict]:
+    def _aggregate_records(
+        self,
+        records: list[dict],
+        aggregation: str,
+    ) -> list[dict]:
         grouped_records = {}
 
         for record in records:
@@ -156,7 +190,9 @@ class WeatherService:
             elif aggregation == "monthly":
                 key = f"{dt.year:04d}-{dt.month:02d}"
             else:
-                raise ValueError("Invalid aggregation. Use: none, hourly, daily, monthly")
+                raise ValueError(
+                    "Invalid aggregation. Use: none, hourly, daily, monthly"
+                )
 
             grouped_records.setdefault(key, []).append(record)
 
@@ -170,6 +206,29 @@ class WeatherService:
             }
             for key, group in grouped_records.items()
         ]
+
+    def _filter_fields(
+        self,
+        records: list[dict],
+        fields: list[str] | None,
+    ) -> list[dict]:
+        if not fields:
+            return records
+
+        filtered_records = []
+
+        for record in records:
+            filtered_record = {"datetime": record["datetime"]}
+
+            for field in fields:
+                filtered_record[field] = record.get(field)
+
+            if "records_count" in record:
+                filtered_record["records_count"] = record["records_count"]
+
+            filtered_records.append(filtered_record)
+
+        return filtered_records
 
     def _average(self, records: list[dict], field: str) -> float | None:
         values = [record[field] for record in records if record[field] is not None]
