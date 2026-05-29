@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 from statistics import mean
 
 from loguru import logger
@@ -24,6 +24,10 @@ class WeatherService:
     ) -> dict:
         start_date = self._to_naive_datetime(start_date)
         end_date = self._to_naive_datetime(end_date)
+
+        if aggregation in {"daily", "monthly"}:
+            start_date = datetime.combine(start_date.date(), time.min)
+            end_date = datetime.combine(end_date.date(), time.max)
 
         cached_records = self._get_cached_records(station_id, start_date, end_date)
 

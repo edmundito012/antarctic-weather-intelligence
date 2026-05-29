@@ -19,6 +19,7 @@ VALID_FIELDS = {"temperature", "pressure", "wind_speed"}
 @router.get(
     "/api/antarctica/data/start/{start_date}/end/{end_date}/station/{station_id}",
     response_model=WeatherResponse,
+    response_model_exclude_none=True,
 )
 async def get_weather_data(
     start_date: str,
