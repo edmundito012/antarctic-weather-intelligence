@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import datetime, UTC
 from statistics import mean
 
 from loguru import logger
@@ -264,6 +264,6 @@ class WeatherService:
             return None
 
         oldest_cached_record = min(created_at_values)
-        age = datetime.utcnow() - oldest_cached_record
+        age = datetime.now(UTC) - oldest_cached_record
 
         return round(age.total_seconds() / 60, 2)
