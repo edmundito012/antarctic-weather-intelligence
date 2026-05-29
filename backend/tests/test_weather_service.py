@@ -135,3 +135,37 @@ def test_calculate_cache_age_minutes_returns_value():
 
     assert result is not None
     assert result >= 4.9
+
+def test_cache_complete_returns_true_for_full_hourly_range():
+    service = WeatherService(db=None)
+
+    records = [
+        {"datetime": "2024-01-01T00:00"},
+        {"datetime": "2024-01-01T01:00"},
+        {"datetime": "2024-01-01T02:00"},
+    ]
+
+    result = service._is_cache_complete(
+        records,
+        datetime(2024, 1, 1, 0, 0),
+        datetime(2024, 1, 1, 2, 0),
+    )
+
+    assert result is True
+
+
+def test_cache_complete_returns_false_when_hour_missing():
+    service = WeatherService(db=None)
+
+    records = [
+        {"datetime": "2024-01-01T00:00"},
+        {"datetime": "2024-01-01T02:00"},
+    ]
+
+    result = service._is_cache_complete(
+        records,
+        datetime(2024, 1, 1, 0, 0),
+        datetime(2024, 1, 1, 2, 0),
+    )
+
+    assert result is False

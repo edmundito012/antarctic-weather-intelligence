@@ -1,5 +1,4 @@
-from datetime import datetime, UTC
-from datetime import datetime, timedelta, time
+from datetime import UTC, datetime, timedelta, time
 from statistics import mean
 
 from loguru import logger
@@ -276,18 +275,27 @@ class WeatherService:
         if not records:
             return False
 
-        cached_dates = {
-            datetime.fromisoformat(record["datetime"]).date()
+        cached_datetimes = {
+            datetime.fromisoformat(record["datetime"])
             for record in records
         }
 
-        current_date = start_date.date()
-        final_date = end_date.date()
+        current = start_date.replace(
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
 
-        while current_date <= final_date:
-            if current_date not in cached_dates:
+        final = end_date.replace(
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+
+        while current <= final:
+            if current not in cached_datetimes:
                 return False
 
-            current_date = current_date.fromordinal(current_date.toordinal() + 1)
+            current += timedelta(hours=1)
 
         return True
