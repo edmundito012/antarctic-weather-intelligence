@@ -115,6 +115,7 @@ async def get_weather_data(
         "end_date": madrid_end_date.isoformat(),
         "aggregation": aggregation,
         "cache_status": weather_data["cache_status"],
+        "cache_age_minutes": weather_data.get("cache_age_minutes"),
         "records_count": len(weather_data["records"]),
         "records": weather_data["records"],
     }

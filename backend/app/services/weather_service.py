@@ -42,7 +42,11 @@ class WeatherService:
 
             records = self._filter_fields(records, fields)
 
-            return {"cache_status": "hit", "records": records}
+            return {
+                "cache_status": "hit",
+                "cache_age_minutes": self._calculate_cache_age_minutes(cached_records),
+                "records": records,
+            }
 
         logger.info("Cache miss")
         logger.info("Calling Open-Meteo")
@@ -64,7 +68,11 @@ class WeatherService:
 
         records = self._filter_fields(records, fields)
 
-        return {"cache_status": "miss", "records": records}
+        return {
+            "cache_status": "miss",
+            "cache_age_minutes": 0,
+            "records": records,
+        }
 
     def _get_cached_records(
         self,
@@ -89,6 +97,7 @@ class WeatherService:
                 "temperature": row.temperature,
                 "pressure": row.pressure,
                 "wind_speed": row.wind_speed,
+                "created_at": row.created_at,
             }
             for row in results
         ]
@@ -240,3 +249,21 @@ class WeatherService:
 
     def _to_naive_datetime(self, dt: datetime) -> datetime:
         return dt.replace(tzinfo=None)
+
+    def _calculate_cache_age_minutes(self, records: list[dict]) -> float | None:
+        if not records:
+            return None
+
+        created_at_values = [
+            record["created_at"]
+            for record in records
+            if record.get("created_at") is not None
+        ]
+
+        if not created_at_values:
+            return None
+
+        oldest_cached_record = min(created_at_values)
+        age = datetime.utcnow() - oldest_cached_record
+
+        return round(age.total_seconds() / 60, 2)

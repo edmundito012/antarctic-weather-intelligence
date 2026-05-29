@@ -22,5 +22,6 @@ class WeatherResponse(BaseModel):
     end_date: datetime
     aggregation: str
     cache_status: str
+    cache_age_minutes: Optional[float] = None
     records_count: int
     records: list[WeatherRecord | AggregatedWeatherRecord]
